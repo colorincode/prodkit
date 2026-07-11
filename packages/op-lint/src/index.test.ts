@@ -189,6 +189,7 @@ describe("@prodkit/op-lint plugin", () => {
       expect(snippets).not.toContain("Op.of(999)");
       expect(snippets).not.toContain("return a / b");
       expect(output).toContain("Compose this Op with yield*");
+      expect(output).toContain("Use a synchronous generator for Op(...)");
     } finally {
       project.cleanup();
     }
@@ -340,13 +341,11 @@ describe("@prodkit/op-lint plugin", () => {
       },
       {
         code: "const program = Op(async function* () { await Op.of(1); });",
-        output: "const program = Op(async function* () { yield* Op.of(1); });",
-        errors: [{ messageId: "missingYieldStar" }],
+        errors: [{ messageId: "asyncGeneratorUnsupported" }],
       },
       {
         code: "const program = Op(async function* () { return await Op.of(1); });",
-        output: "const program = Op(async function* () { return yield* Op.of(1); });",
-        errors: [{ messageId: "missingYieldStar" }],
+        errors: [{ messageId: "asyncGeneratorUnsupported" }],
       },
       {
         code: 'import { Op as Operation } from "@prodkit/op"; const program = Operation(function* () { Operation.of(1); });',

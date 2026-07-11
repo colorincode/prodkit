@@ -27,12 +27,15 @@ type RangedNode = {
 };
 
 type RuleContext = TypeAwareRuleContext & {
-  report(diagnostic: { node: RangedNode; messageId: "missingYieldStar"; fix?: FixFunction }): void;
+  report(diagnostic: { node: RangedNode; messageId: MessageId; fix?: FixFunction }): void;
 };
 
 type FunctionLikeNode = RangedNode & {
+  async?: boolean;
   generator?: boolean;
 };
+
+type MessageId = "asyncGeneratorUnsupported" | "missingYieldStar";
 
 type ExpressionStatementNode = RangedNode & {
   type: "ExpressionStatement";
@@ -254,6 +257,8 @@ export const requireYieldStarRule = {
     },
     fixable: "code" as const,
     messages: {
+      asyncGeneratorUnsupported:
+        "Use a synchronous generator for Op(...); async generators cannot be run by @prodkit/op.",
       missingYieldStar: "Compose this Op with yield* so it runs inside the generator.",
     },
     schema: [],
@@ -334,7 +339,14 @@ export const requireYieldStarRule = {
           isFallbackOpIdentifier,
         );
         if (generatorArgument !== undefined) {
-          opGeneratorArgumentRanges.add(nodeRangeKey(generatorArgument));
+          if (generatorArgument.async === true) {
+            context.report({
+              node: generatorArgument,
+              messageId: "asyncGeneratorUnsupported",
+            });
+          } else {
+            opGeneratorArgumentRanges.add(nodeRangeKey(generatorArgument));
+          }
         }
       },
       FunctionDeclaration(node: unknown) {
@@ -474,7 +486,7 @@ function isOpGeneratorBody(
   getOpTypeDetector: OpTypeDetectorProvider,
   isFallbackOpIdentifier: FallbackOpIdentifierPredicate,
 ): boolean {
-  if (!isFunctionLike(node) || node.generator !== true) return false;
+  if (!isFunctionLike(node) || node.generator !== true || node.async === true) return false;
   if (opGeneratorArgumentRanges.has(nodeRangeKey(node))) return true;
 
   return isFirstArgumentOfOpFactoryCall(node, getOpTypeDetector, isFallbackOpIdentifier);
@@ -484,7 +496,7 @@ function opFactoryGeneratorArgument(
   callExpression: CallExpressionNode,
   getOpTypeDetector: OpTypeDetectorProvider,
   isFallbackOpIdentifier: FallbackOpIdentifierPredicate,
-): RangedNode | undefined {
+): FunctionLikeNode | undefined {
   if (!isKnownOpFactoryCallee(callExpression.callee, getOpTypeDetector, isFallbackOpIdentifier)) {
     return undefined;
   }

@@ -23,7 +23,7 @@ const yielded = Op(function* () {
   yield Op.of(1);
 });
 
-const awaited = Op(async function* () {
+const asyncBody = Op(async function* () {
   await Op.of(1);
 });
 ```
@@ -120,7 +120,7 @@ The rule reports:
 - Direct Op expression statements, such as `Op.of(1);`
 - Returned Ops, such as `return loadUser();`
 - Non-delegating yields, such as `yield loadUser();`
-- Awaited Ops, such as `await loadUser();`
+- Async generator bodies passed to `Op(...)`, because `@prodkit/op` runs synchronous generators
 
 The rule allows:
 
