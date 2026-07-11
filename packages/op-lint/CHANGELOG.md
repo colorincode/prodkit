@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- No entries yet.
+
+## [0.1.4] - 2026-07-11
+
 ### Fixed
 
 - Report async generator bodies passed to `Op(...)` as unsupported instead of autofixing awaited
@@ -64,3 +70,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Establish the unpublished package baseline for release tooling.
+
