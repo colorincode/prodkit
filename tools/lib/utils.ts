@@ -20,14 +20,15 @@ type OwnPropertyValue<T, K extends PropertyKey> =
         : K extends keyof T // best case: we know the object type, and the property exists
           ? T[K] // exact match, we know the type of the value
           : undefined // not a key of the object, so definitely undefined
-    : unknown;
+     : undefined; //changed this, so type check and runtime match
 
 export const getOwnPropertyValue = <T, K extends PropertyKey>(
   value: T,
   key: K,
 ): OwnPropertyValue<T, K> => {
   return unsafeCoerce(
-    typeof value === "object" && value !== null && Object.hasOwn(value, key)
+  
+    typeof value === "object" && value !== null && Object.hasOwn(value, key)  // thought funcs could be added here but the types would have no overlap trying to pass all 3
       ? Reflect.get(value, key)
       : undefined,
   );
