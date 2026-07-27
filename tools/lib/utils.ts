@@ -27,8 +27,8 @@ export const getOwnPropertyValue = <T, K extends PropertyKey>(
   key: K,
 ): OwnPropertyValue<T, K> => {
   return unsafeCoerce(
-  
-    typeof value === "object" && value !== null && Object.hasOwn(value, key)  // thought funcs could be added here but the types would have no overlap trying to pass all 3
+  (typeof value === "object" && value !== null || typeof value === "function") && Object.hasOwn(value, key)
+    // typeof value === "object" && value !== null && Object.hasOwn(value, key)  // thought funcs could be added here but the types would have no overlap trying to pass all 3
       ? Reflect.get(value, key)
       : undefined,
   );
