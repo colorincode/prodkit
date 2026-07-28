@@ -32,8 +32,7 @@ export const getOwnPropertyValue = <T, K extends PropertyKey>(
   key: K,
 ): OwnPropertyValue<T, K> => {
   return unsafeCoerce(
-    ((typeof value === "object" && value !== null) ||
-      typeof value === "function") &&
+    ((typeof value === "object" && value !== null) || typeof value === "function") &&
       Object.hasOwn(value, key)
       ? Reflect.get(value, key)
       : undefined,
@@ -53,23 +52,18 @@ export class InvalidJsonError extends TaggedError("InvalidJsonError")<{
 export const parseJson = Op(function* (input: string) {
   return yield* Op.try(
     (): unknown => JSON.parse(input),
-    (cause) =>
-      new InvalidJsonError({ cause: unsafeCoerce<SyntaxError>(cause), input }),
+    (cause) => new InvalidJsonError({ cause: unsafeCoerce<SyntaxError>(cause), input }),
   );
 });
 
 // oxlint-disable-next-line typescript/no-explicit-any clever hack for non-empty string type
 export type NonEmptyString = `${any}${string}`;
-export const NonEmptyString: v.BaseSchema<
-  string,
-  NonEmptyString,
-  v.StringIssue
-> = unsafeCoerce(v.pipe(v.string(), v.nonEmpty()));
+export const NonEmptyString: v.BaseSchema<string, NonEmptyString, v.StringIssue> = unsafeCoerce(
+  v.pipe(v.string(), v.nonEmpty()),
+);
 
 export type NonEmptyArray<T> = [T, ...T[]];
-export const NonEmptyArray = <
-  S extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
->(
+export const NonEmptyArray = <S extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>>(
   schema: S,
 ): v.BaseSchema<
   v.InferInput<S>[],
@@ -83,10 +77,7 @@ export const PackageJson = v.object({
   main: v.optional(NonEmptyString),
   module: v.optional(NonEmptyString),
   exports: v.optional(
-    v.record(
-      NonEmptyString,
-      v.union([NonEmptyString, v.record(NonEmptyString, NonEmptyString)]),
-    ),
+    v.record(NonEmptyString, v.union([NonEmptyString, v.record(NonEmptyString, NonEmptyString)])),
   ),
 });
 export type PackageJson = v.InferOutput<typeof PackageJson>;
@@ -96,9 +87,7 @@ export class ParseError extends TaggedError("ParseError")<{
   issues: v.BaseIssue<unknown>[];
   input: unknown;
 }>() {}
-export const parse = <
-  S extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
->(
+export const parse = <S extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>>(
   schema: S,
   input: unknown,
 ) =>
@@ -118,10 +107,7 @@ export class FileError extends TaggedError("FileError")<{
   path: string;
 }>() {}
 
-export const readFile = Op(function* (
-  filepath: string,
-  encoding?: BufferEncoding,
-) {
+export const readFile = Op(function* (filepath: string, encoding?: BufferEncoding) {
   encoding ??= "utf8";
   return yield* Op.try(
     (signal) => fs.readFile(filepath, { encoding, signal }),
@@ -137,8 +123,7 @@ export const writeFile = Op(function* (params: {
   const { filepath, content, encoding = "utf8" } = params;
   return yield* Op.try(
     (signal) => fs.writeFile(filepath, content, { encoding, signal }),
-    (cause) =>
-      new FileError({ type: "write", path: filepath.toString(), cause }),
+    (cause) => new FileError({ type: "write", path: filepath.toString(), cause }),
   );
 });
 
@@ -151,15 +136,12 @@ export const readPackageJson = Op(function* (filepath: string) {
 });
 
 export const getRepoRoot = Op.try(readRepoRoot, (cause) =>
-  cause instanceof RepoRootNotFoundError
-    ? new NoEntError({ path: cause.path })
-    : raise(cause),
+  cause instanceof RepoRootNotFoundError ? new NoEntError({ path: cause.path }) : raise(cause),
 );
 
 export const fromRepoRoot = Op(function* (relativePath: string) {
   const repoRoot = yield* getRepoRoot();
   const absolutePath = path.join(repoRoot, relativePath);
-  if (!existsSync(absolutePath))
-    return yield* new NoEntError({ path: absolutePath });
+  if (!existsSync(absolutePath)) return yield* new NoEntError({ path: absolutePath });
   return absolutePath;
 });
